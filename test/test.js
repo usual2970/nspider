@@ -9,16 +9,19 @@ describe('测试onhtml',()=>{
 	const nsp=new nspider('baidu')
 	it("onhtml的参数应该是HtmlElement的实例",(done)=>{
 
-		nsp.onHtml('div',(ele)=>{
+		nsp.onHtml('a[href]',(ele)=>{
 	
 
-			console.log(ele.$.find('a').text())
+			console.log(ele.$.attr('href'))
+			nsp.visit(ele.$.attr('href'));
 			
 		})
 		
 		nsp.visit('http://www.baidu.com');
-		done()
+		//done()
 	})
+
+
 })
 
 describe('测试request模块',()=>{
