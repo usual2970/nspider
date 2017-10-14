@@ -3,44 +3,40 @@ import zlib from 'zlib'
 
 
 
+export default class Nrequest {
 
+    constructor() {
 
-export default class Nrequest{
-
-    constructor(){
-        
     }
 
     nrequest(options) {
         const req = request(options);
 
-        return new Promise((resolve)=>{
+        return new Promise((resolve) => {
 
-            req.on('response', (res)=> {
+            req.on('response', (res) => {
                 var chunks = [];
-                res.on('data', (chunk)=> {
+                res.on('data', (chunk) => {
                     chunks.push(chunk);
                 });
 
-                res.on('end', ()=> {
+                res.on('end', () => {
                     var buffer = Buffer.concat(chunks);
                     var encoding = res.headers['content-encoding'];
                     if (encoding == 'gzip') {
-                        zlib.gunzip(buffer, (err, decoded)=>{
-                            if(err){
+                        zlib.gunzip(buffer, (err, decoded) => {
+                            if (err) {
                                 reject(err)
-                            }
-                            else{
+                            } else {
                                 resolve(decoded && decoded.toString())
                             }
-                            
+
                         });
                     } else if (encoding == 'deflate') {
-                        zlib.inflate(buffer, (err, decoded)=>{
-                            if(err){
+                        zlib.inflate(buffer, (err, decoded) => {
+                            if (err) {
                                 reject(err)
-                            }
-                            else{
+                            } else {
                                 resolve(decoded && decoded.toString())
                             }
                         })
@@ -50,27 +46,29 @@ export default class Nrequest{
                 });
             });
 
-            req.on('error', (err)=>{
+            req.on('error', (err) => {
                 reject(err)
             });
 
 
 
-
         })
 
-        
+
     }
 
-    async doRequest(options){
-        let err,data=null
-        try{
-            data=await this.nrequest(options)
-        }catch(e){
-            err=e
+    async doRequest(options) {
+        let err, data = null
+        try {
+            data = await this.nrequest(options)
+        } catch (e) {
+            err = e
         }
-        return {err,data}
-        
-        
+        return {
+            err,
+            data
+        }
+
+
     }
 }
