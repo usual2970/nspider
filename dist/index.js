@@ -11,16 +11,24 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _request = require('./request.js');
 
+var _request2 = _interopRequireDefault(_request);
+
+var _cheerio = require('cheerio');
+
+var _cheerio2 = _interopRequireDefault(_cheerio);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var HtmlElement = exports.HtmlElement = function HtmlElement(_ref) {
 	var tag = _ref.tag,
-	    html = _ref.html;
+	    $ = _ref.$;
 
 	_classCallCheck(this, HtmlElement);
 
 	this.tag = tag;
-	this.html = html;
+	this.$ = $;
 };
 
 var Request = function Request(_ref2) {
@@ -58,6 +66,7 @@ var nspider = function () {
 		this.requestCallBacks = [];
 		this.responseCallBacks = [];
 		this.headers = headers;
+		this.nrequest = new _request2.default();
 	}
 
 	_createClass(nspider, [{
@@ -91,7 +100,7 @@ var nspider = function () {
 				this.handleRequest(req);
 			}
 
-			var rs = (0, _request.doRequest)(options);
+			var rs = this.nrequest.doRequest(options);
 			var that = this;
 			rs.then(function (data) {
 
@@ -100,8 +109,8 @@ var nspider = function () {
 					that.handleResponse(res);
 				}
 				if (_this.htmlCallBacks.size > 0) {
-					var element = new HtmlElement({ tag: tag, html: data.data });
-					that.handleHtml(element);
+					var $ = _cheerio2.default.load(data.data);
+					that.handleHtml({ tag: tag, $: $ });
 				}
 			});
 		}
@@ -189,7 +198,9 @@ var nspider = function () {
 		}
 	}, {
 		key: 'handleHtml',
-		value: function handleHtml(element) {
+		value: function handleHtml(_ref5) {
+			var tag = _ref5.tag,
+			    $ = _ref5.$;
 			var _iteratorNormalCompletion3 = true;
 			var _didIteratorError3 = false;
 			var _iteratorError3 = undefined;
@@ -200,7 +211,11 @@ var nspider = function () {
 					    selector = _step3$value[0],
 					    cb = _step3$value[1];
 
-					cb(element);
+					var objects = $(selector);
+					for (var i = 0; i < objects.length; i++) {
+						var element = new HtmlElement({ tag: tag, $: $(objects[i]) });
+						cb(element);
+					}
 				}
 			} catch (err) {
 				_didIteratorError3 = true;

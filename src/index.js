@@ -1,11 +1,23 @@
-import {doRequest} from './request.js' 
-
+import nrequest from './request.js' 
+import cheerio from 'cheerio'
+import Bottleneck from 'bottleneck'
 
 export class HtmlElement{
-	constructor({tag,html}){
+	constructor({tag,$}){
 		this.tag=tag
-		this.html=html
+		this.$=$
 	}
+}
+
+
+export class LimitRule{
+    constructor({maxConnections=0,delayTime=0,highWater=-1,}){
+    	this.maxConcurrent=maxConnections
+    	this.minTime=delayTime
+    	this.highWater=highWater
+    	this.strategy= Bottleneck.strategy.LEAK
+    	this.rejectOnDrop=false
+    }
 }
 
 
@@ -14,6 +26,7 @@ class Request{
 		this.tag=tag
 		this.requestOption=requestOption
 		this.url=url
+
 	}
 }
 
@@ -32,6 +45,10 @@ export default class nspider{
 		this.requestCallBacks=[]
 		this.responseCallBacks=[]
 		this.headers=headers
+		this.nrequest=new nrequest()
+		this.limitRule=new LimitRule({})
+
+		this.limiter=new Bottleneck(this.limitRule.maxConcurrent,this.limitRule.minTime)
 	}
 
 
@@ -57,11 +74,10 @@ export default class nspider{
 			const req=new Request({tag,requestOption:options,url})
 			this.handleRequest(req)
 		}
-
-		const rs=doRequest(options)
+		
+		const rs=this.limiter.schedule(this.nrequest.nrequest,options) 
 		const that=this
 		rs.then((data)=>{
-			
 
 
 			if(this.responseCallBacks.length>0){
@@ -69,8 +85,8 @@ export default class nspider{
 				that.handleResponse(res)
 			}
 			if(this.htmlCallBacks.size>0){
-				const element=new HtmlElement({tag,html:data.data})
-				that.handleHtml(element)
+				const $=cheerio.load(data)
+				that.handleHtml({tag,$})
 			}
 
 		})
@@ -90,6 +106,13 @@ export default class nspider{
 
 	setHeader(key,val){
 		this.headers[key]=val
+		return this
+	}
+
+
+	setLimiter(limitRule){
+		this.limitRule=limitRule
+		this.limiter=new Bottleneck(this.limitRule.maxConcurrent,this.limitRule.minTime)
 		return this
 	}
 
@@ -121,9 +144,13 @@ export default class nspider{
 		}
 	}
 
-	handleHtml(element){
+	handleHtml({tag,$}){
 		for(let [selector,cb] of this.htmlCallBacks){
-			cb(element)
+			const objects=$(selector)
+			for(let i=0;i<objects.length;i++){
+				const element=new HtmlElement({tag,$:$(objects[i])})
+				cb(element)
+			}
 		}
 	}
 }
