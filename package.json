@@ -1,6 +1,6 @@
 {
   "name": "nspider22",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "a node spider frameword",
   "main": "index.js",
   "scripts": {
@@ -17,6 +17,7 @@
     "spider"
   ],
   "author": "536464346@qq.com",
+  "homepage": "https://github.com/usual2970/nspider#readme",
   "license": "ISC",
   "devDependencies": {
     "babel-cli": "^6.26.0",
