@@ -1,8 +1,8 @@
 {
-  "name": "nspider",
+  "name": "nspider22",
   "version": "1.0.0",
   "description": "a node spider frameword",
-  "main": "dist/index.js",
+  "main": "index.js",
   "scripts": {
     "test": "mocha -t 5000 --compilers js:babel-core/register --require babel-polyfill",
     "build": "rimraf dist/ && babel ./src/ --out-dir dist/ --ignore ./node_modules,./.babelrc,./package-lock.json,./package.json,./npm-debug.log --copy-files"
@@ -17,7 +17,6 @@
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.0",
-    "babel-polyfill": "^6.26.0",
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
     "babel-preset-stage-2": "^6.24.1",
@@ -28,6 +27,7 @@
   "dependencies": {
     "bottleneck": "^1.16.0",
     "cheerio": "^1.0.0-rc.2",
+    "babel-polyfill": "^6.26.0",
     "request": "^2.83.0"
   }
 }
