@@ -54,7 +54,7 @@ export default class nspider {
 
 
 	constructor({
-		name,
+		name = '',
 		headers = {}
 	}) {
 		this.name = name

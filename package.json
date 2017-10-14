@@ -1,11 +1,15 @@
 {
   "name": "nspider22",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "a node spider frameword",
   "main": "index.js",
   "scripts": {
     "test": "mocha -t 5000 --compilers js:babel-core/register --require babel-polyfill",
     "build": "rimraf dist/ && babel ./src/ --out-dir dist/ --ignore ./node_modules,./.babelrc,./package-lock.json,./package.json,./npm-debug.log --copy-files"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/usual2970/nspider.git"
   },
   "keywords": [
     "nodejs",
