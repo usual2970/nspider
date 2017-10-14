@@ -79,7 +79,6 @@ export default class nspider{
 		const that=this
 		rs.then((data)=>{
 
-
 			if(this.responseCallBacks.length>0){
 				const res=new Response({tag,responseData:data})
 				that.handleResponse(res)
