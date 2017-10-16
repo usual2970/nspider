@@ -18,7 +18,7 @@ Features:
 
 	$ npm install nspider22
 
-## Usaget
+## Usage
 
 ```
 var nspider=require('nspider22')
