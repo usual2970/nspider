@@ -1,6 +1,6 @@
 {
   "name": "nspider22",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "a node spider frameword",
   "main": "index.js",
   "scripts": {
