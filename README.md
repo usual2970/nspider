@@ -20,7 +20,7 @@ Features:
 
 ## Usage
 
-```
+```js
 //basic use
 var nspider=require('nspider22')
 
