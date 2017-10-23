@@ -20,6 +20,7 @@ Features:
 
 ## Usage
 
+### Basic use
 ```js
 //basic use
 var nspider=require('nspider22')
@@ -31,6 +32,11 @@ nsp.onHtml('a',function(ele){
 
 nsp.visit("http://www.baidu.com");
 
+```
+
+### Set headers
+
+```js
 //set headers
 var nspider=require('nspider22')
 
