@@ -20,10 +20,6 @@ function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, a
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var LimitRule = function LimitRule() {
-    _classCallCheck(this, LimitRule);
-};
-
 var Nrequest = function () {
     function Nrequest() {
         _classCallCheck(this, Nrequest);
@@ -98,7 +94,10 @@ var Nrequest = function () {
                                 err = _context.t0;
 
                             case 10:
-                                return _context.abrupt('return', { err: err, data: data });
+                                return _context.abrupt('return', {
+                                    err: err,
+                                    data: data
+                                });
 
                             case 11:
                             case 'end':

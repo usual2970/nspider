@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-exports.HtmlElement = undefined;
+exports.LimitRule = exports.HtmlElement = undefined;
 
 var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
@@ -16,6 +16,10 @@ var _request2 = _interopRequireDefault(_request);
 var _cheerio = require('cheerio');
 
 var _cheerio2 = _interopRequireDefault(_cheerio);
+
+var _bottleneck = require('bottleneck');
+
+var _bottleneck2 = _interopRequireDefault(_bottleneck);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -31,10 +35,27 @@ var HtmlElement = exports.HtmlElement = function HtmlElement(_ref) {
 	this.$ = $;
 };
 
-var Request = function Request(_ref2) {
-	var tag = _ref2.tag,
-	    requestOption = _ref2.requestOption,
-	    url = _ref2.url;
+var LimitRule = exports.LimitRule = function LimitRule(_ref2) {
+	var _ref2$maxConnections = _ref2.maxConnections,
+	    maxConnections = _ref2$maxConnections === undefined ? 0 : _ref2$maxConnections,
+	    _ref2$delayTime = _ref2.delayTime,
+	    delayTime = _ref2$delayTime === undefined ? 0 : _ref2$delayTime,
+	    _ref2$highWater = _ref2.highWater,
+	    highWater = _ref2$highWater === undefined ? -1 : _ref2$highWater;
+
+	_classCallCheck(this, LimitRule);
+
+	this.maxConcurrent = maxConnections;
+	this.minTime = delayTime;
+	this.highWater = highWater;
+	this.strategy = _bottleneck2.default.strategy.LEAK;
+	this.rejectOnDrop = false;
+};
+
+var Request = function Request(_ref3) {
+	var tag = _ref3.tag,
+	    requestOption = _ref3.requestOption,
+	    url = _ref3.url;
 
 	_classCallCheck(this, Request);
 
@@ -43,9 +64,9 @@ var Request = function Request(_ref2) {
 	this.url = url;
 };
 
-var Response = function Response(_ref3) {
-	var tag = _ref3.tag,
-	    responseData = _ref3.responseData;
+var Response = function Response(_ref4) {
+	var tag = _ref4.tag,
+	    responseData = _ref4.responseData;
 
 	_classCallCheck(this, Response);
 
@@ -54,10 +75,11 @@ var Response = function Response(_ref3) {
 };
 
 var nspider = function () {
-	function nspider(_ref4) {
-		var name = _ref4.name,
-		    _ref4$headers = _ref4.headers,
-		    headers = _ref4$headers === undefined ? {} : _ref4$headers;
+	function nspider(_ref5) {
+		var _ref5$name = _ref5.name,
+		    name = _ref5$name === undefined ? '' : _ref5$name,
+		    _ref5$headers = _ref5.headers,
+		    headers = _ref5$headers === undefined ? {} : _ref5$headers;
 
 		_classCallCheck(this, nspider);
 
@@ -67,6 +89,9 @@ var nspider = function () {
 		this.responseCallBacks = [];
 		this.headers = headers;
 		this.nrequest = new _request2.default();
+		this.limitRule = new LimitRule({});
+
+		this.limiter = new _bottleneck2.default(this.limitRule.maxConcurrent, this.limitRule.minTime);
 	}
 
 	_createClass(nspider, [{
@@ -96,21 +121,31 @@ var nspider = function () {
 			options.url = url;
 
 			if (this.requestCallBacks.length > 0) {
-				var req = new Request({ tag: tag, requestOption: options, url: url });
+				var req = new Request({
+					tag: tag,
+					requestOption: options,
+					url: url
+				});
 				this.handleRequest(req);
 			}
 
-			var rs = this.nrequest.doRequest(options);
+			var rs = this.limiter.schedule(this.nrequest.nrequest, options);
 			var that = this;
 			rs.then(function (data) {
 
 				if (_this.responseCallBacks.length > 0) {
-					var res = new Response({ tag: tag, responseData: data });
+					var res = new Response({
+						tag: tag,
+						responseData: data
+					});
 					that.handleResponse(res);
 				}
 				if (_this.htmlCallBacks.size > 0) {
-					var $ = _cheerio2.default.load(data.data);
-					that.handleHtml({ tag: tag, $: $ });
+					var $ = _cheerio2.default.load(data);
+					that.handleHtml({
+						tag: tag,
+						$: $
+					});
 				}
 			});
 		}
@@ -130,6 +165,13 @@ var nspider = function () {
 			return this;
 		}
 	}, {
+		key: 'setLimiter',
+		value: function setLimiter(limitRule) {
+			this.limitRule = limitRule;
+			this.limiter = new _bottleneck2.default(this.limitRule.maxConcurrent, this.limitRule.minTime);
+			return this;
+		}
+	}, {
 		key: 'onHtml',
 		value: function onHtml(selector, cb) {
 			this.htmlCallBacks.set(selector, cb);
@@ -146,7 +188,7 @@ var nspider = function () {
 		}
 	}, {
 		key: 'handleRequest',
-		value: function handleRequest() {
+		value: function handleRequest(req) {
 			var _iteratorNormalCompletion = true;
 			var _didIteratorError = false;
 			var _iteratorError = undefined;
@@ -154,6 +196,8 @@ var nspider = function () {
 			try {
 				for (var _iterator = this.requestCallBacks[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
 					var cb = _step.value;
+
+					cb(req);
 				}
 			} catch (err) {
 				_didIteratorError = true;
@@ -172,7 +216,7 @@ var nspider = function () {
 		}
 	}, {
 		key: 'handleResponse',
-		value: function handleResponse() {
+		value: function handleResponse(res) {
 			var _iteratorNormalCompletion2 = true;
 			var _didIteratorError2 = false;
 			var _iteratorError2 = undefined;
@@ -180,6 +224,8 @@ var nspider = function () {
 			try {
 				for (var _iterator2 = this.responseCallBacks[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
 					var cb = _step2.value;
+
+					cb(res);
 				}
 			} catch (err) {
 				_didIteratorError2 = true;
@@ -198,9 +244,9 @@ var nspider = function () {
 		}
 	}, {
 		key: 'handleHtml',
-		value: function handleHtml(_ref5) {
-			var tag = _ref5.tag,
-			    $ = _ref5.$;
+		value: function handleHtml(_ref6) {
+			var tag = _ref6.tag,
+			    $ = _ref6.$;
 			var _iteratorNormalCompletion3 = true;
 			var _didIteratorError3 = false;
 			var _iteratorError3 = undefined;
@@ -213,7 +259,10 @@ var nspider = function () {
 
 					var objects = $(selector);
 					for (var i = 0; i < objects.length; i++) {
-						var element = new HtmlElement({ tag: tag, $: $(objects[i]) });
+						var element = new HtmlElement({
+							tag: tag,
+							$: $(objects[i])
+						});
 						cb(element);
 					}
 				}
