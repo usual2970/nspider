@@ -78,6 +78,28 @@ nsp.onHtml("body",function(ele){
 nsp.visit("https://www.zhihu.com/explore","zhihu");
 ```
 
+
+### set limiter
+
+```js
+var nspider=require('nspider22')
+
+var nsp=new nspider({name:'baidu'});
+
+var limitRule = new LimitRule({
+        maxConnections:1,
+        delayTime:1000
+    })
+
+nsp.setLimiter(limitRule)
+
+nsp.onHtml('a',function(ele){
+    console.log(ele.$.attr('href'));
+})
+
+nsp.visit("http://www.baidu.com");
+```
+
 # Rough todolist
 
  * Introducing zombie to deal with page with complex ajax
