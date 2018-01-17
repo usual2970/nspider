@@ -86,7 +86,7 @@ var nspider=require('nspider22')
 
 var nsp=new nspider({name:'baidu'});
 
-var limitRule = new LimitRule({
+var limitRule = new nspider.LimitRule({
         maxConnections:1,
         delayTime:1000
     })
