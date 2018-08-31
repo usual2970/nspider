@@ -2,7 +2,6 @@ import request from 'request'
 import zlib from 'zlib'
 
 
-
 export default class Nrequest {
 
     constructor() {
@@ -49,7 +48,6 @@ export default class Nrequest {
             req.on('error', (err) => {
                 reject(err)
             });
-
 
 
         })
