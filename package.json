@@ -1,7 +1,7 @@
 {
   "name": "nspider22",
-  "version": "1.0.9",
-  "description": "a node spider frameword",
+  "version": "1.0.10",
+  "description": "a node spider framework",
   "main": "index.js",
   "scripts": {
     "test": "mocha -t 5000 --compilers js:babel-core/register --require babel-polyfill",
